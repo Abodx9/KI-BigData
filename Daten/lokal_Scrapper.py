@@ -31,7 +31,7 @@ def extractor(file_path):
   return data
 
 
-folder_path = r"Parteiprogramme\epub-ordner\HTML\gruene"
+folder_path = r"Parteiprogramme\epub-ordner\HTML\AFD"
 for filename in os.listdir(folder_path):
   if filename.endswith(".html"):   # For Phuong statt html , xhtml
     file_path = os.path.join(folder_path, filename)
