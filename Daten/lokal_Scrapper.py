@@ -1,5 +1,8 @@
 import os
 from bs4 import BeautifulSoup
+import csv
+
+
 
 def extractor(file_path):
 
@@ -31,11 +34,25 @@ def extractor(file_path):
   return data
 
 
-folder_path = r"Parteiprogramme\epub-ordner\HTML\AFD"
-for filename in os.listdir(folder_path):
-  if filename.endswith(".html"):   # For Phuong statt html , xhtml
-    file_path = os.path.join(folder_path, filename)
-    extracted_data = extractor(file_path)
-    for item in extracted_data:
-      print(f"Title: {item['title']}\nParagraph: {item['p']}\n---")
+#Die gruenen
+folder_path = r"/Users/phuong/Documents/GitHub/KI-BigData/Parteiprogramme/epub-ordner/HTML/gruene"
+with open('gruenendata.csv', 'a', newline='', encoding='utf-8') as csvfile:
+  csv_writer = csv.writer(csvfile)
+  csv_writer.writerow(['Titel', 'Paragraph'])
+  print(folder_path)
+
+  for filename in os.listdir(folder_path):
+
+    if filename.endswith(".xhtml"):  #htmlx bei gruenen
+      file_path = os.path.join(folder_path, filename)
+      extracted_data = extractor(file_path)
+
+      for item in extracted_data:
+        title = item["title"]
+        paragraph = item["p"]
+        csv_writer.writerow([title, paragraph])
+        print(f"Title: {item['title']}\nParagraph: {item['p']}\n---")
+
+
+
 
