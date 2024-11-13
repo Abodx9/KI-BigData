@@ -35,15 +35,15 @@ def extractor(file_path):
 
 
 #Die gruenen
-folder_path = r"/Users/phuong/Documents/GitHub/KI-BigData/Parteiprogramme/epub-ordner/HTML/gruene"
-with open('gruenendata.csv', 'a', newline='', encoding='utf-8') as csvfile:
+folder_path = r"/Users/phuong/Documents/GitHub/KI-BigData/Parteiprogramme/epub-ordner/HTML/linke"
+with open('linkedata.csv', 'a', newline='', encoding='utf-8') as csvfile:
   csv_writer = csv.writer(csvfile)
   csv_writer.writerow(['Titel', 'Paragraph'])
   print(folder_path)
 
   for filename in os.listdir(folder_path):
 
-    if filename.endswith(".xhtml"):  #htmlx bei gruenen
+    if filename.endswith(".html"):  #htmlx bei gruenen
       file_path = os.path.join(folder_path, filename)
       extracted_data = extractor(file_path)
 
