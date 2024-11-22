@@ -22,27 +22,33 @@ def extractor(file_path):
             current_title = tag.get_text(strip=True)
 
         else:
-            text = tag.get_text()
-            if not text.isdigit():
-                text = remove_numbers(text)
-                p_tags.append(tag)
+            p_tags.append(tag)
 
     if current_title and p_tags:
-        data.append({"title": current_title, "p": "\n\n".join([p.get_text(strip=True) for p in p_tags])})
+        cleaned_paragraphs = [cleanUp(p.get_text(strip=True)) for p in p_tags]
+        cleaned_paragraphs = [p for p in cleaned_paragraphs if p]
+        data.append({"title": current_title, "p": "\n\n".join(cleaned_paragraphs)})
 
     return data
 
+def cleanUp(text):
+    if text is None:
+        return ""
+    text = remove_numbers(text)
+    return text
+
 
 def remove_numbers(text):
-    index = len(text)
-    while index > 0 and index > len(text) - 5 and (text[index - 1].isdigit() or text[index - 1] == '-'):
-        index -= 1
-    return text[:index]
+    if not text.isdigit():
+        index = len(text)
+        while index > 0 and index > len(text) - 5 and (text[index - 1].isdigit() or text[index - 1] == '-'):
+            index -= 1
+        return text[:index]
 
 
 # cdu
 folder_path = r"/home/a/Documents/Uni/Semester5/ki_bigdata/Projekt/KI-BigData/Parteiprogramme/epub-ordner/HTML/CDUCSU/"
-with open('dcudata1.csv', 'a', newline='', encoding='utf-8') as csvfile:
+with open('cdudata1.csv', 'a', newline='', encoding='utf-8') as csvfile:
     csv_writer = csv.writer(csvfile)
     csv_writer.writerow(['Titel', 'Paragraph'])
     print(folder_path)
