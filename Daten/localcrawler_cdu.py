@@ -24,10 +24,8 @@ def extractor(file_path):
         else:
             text = tag.get_text()
             if not text.isdigit():
-                try:
-                    remove_numbers(text)
-                except:
-                    p_tags.append(tag)
+                text = remove_numbers(text)
+                p_tags.append(tag)
 
     if current_title and p_tags:
         data.append({"title": current_title, "p": "\n\n".join([p.get_text(strip=True) for p in p_tags])})
@@ -49,7 +47,7 @@ with open('dcudata1.csv', 'a', newline='', encoding='utf-8') as csvfile:
     csv_writer.writerow(['Titel', 'Paragraph'])
     print(folder_path)
 
-    for filename in os.listdir(folder_path):
+    for filename in sorted(os.listdir(folder_path)):
 
         if filename.endswith(".html"):  # html bei cdu
             file_path = os.path.join(folder_path, filename)
