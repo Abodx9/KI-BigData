@@ -16,26 +16,48 @@ def extractor(file_path):
     for tag in soup.find_all('p'):
         if tag.find('b'):
             if current_title and p_tags:
-                data.append({"title": current_title, "p": "\n\n".join([p.get_text(strip=True) for p in p_tags])})
+                cleaned_b = [cleanUp(p.get_text(strip=True)) for p in p_tags]
+                cleaned_b = [p for p in cleaned_b if p]
+                data.append({"title": current_title, "p": "\n\n".join(cleaned_b)})
                 p_tags = []
 
-            current_title = tag.get_text(strip=True)
+            cleaned_title = [cleanUp(tag.get_text(strip=True))]
+            cleaned_title = [p for p in cleaned_title if p]
+            current_title = cleaned_title
 
         else:
             p_tags.append(tag)
 
     if current_title and p_tags:
-        cleaned_paragraphs = [cleanUp(p.get_text(strip=True)) for p in p_tags]
-        cleaned_paragraphs = [p for p in cleaned_paragraphs if p]
-        data.append({"title": current_title, "p": "\n\n".join(cleaned_paragraphs)})
+        cleaned_end = [cleanUp(p.get_text(strip=True)) for p in p_tags]
+        cleaned_end = [p for p in cleaned_end if p]
+        data.append({"title": current_title, "p": "\n\n".join(cleaned_end)})
 
     return data
+
 
 def cleanUp(text):
     if text is None:
         return ""
     text = remove_numbers(text)
+    #text = remove_seite(text)
+    text = remove_dots(text)
     return text
+
+
+def remove_seite(text):
+    if "Seite" in text and text[5].isdigit():
+        print("Seite" + text)
+        return ''
+    else:
+        return text
+
+def remove_dots(text):
+    if "....." in text:
+        print("...." + text)
+        return ''
+    else:
+        return text
 
 
 def remove_numbers(text):
@@ -43,7 +65,11 @@ def remove_numbers(text):
         index = len(text)
         while index > 0 and index > len(text) - 5 and (text[index - 1].isdigit() or text[index - 1] == '-'):
             index -= 1
+            #print("index:"+text[index])
+        #print(text)
         return text[:index]
+    else:
+        return ''
 
 
 # cdu
@@ -63,4 +89,4 @@ with open('cdudata1.csv', 'a', newline='', encoding='utf-8') as csvfile:
                 title = item["title"]
                 paragraph = item["p"]
                 csv_writer.writerow([title, paragraph])
-                print(f"Title: {item['title']}\nParagraph: {item['p']}\n---")
+                #print(f"Title: {item['title']}\nParagraph: {item['p']}\n---")
