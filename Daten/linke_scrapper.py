@@ -39,7 +39,7 @@ def linke_extractor(file_path):
 
 
 #Die linke
-folder_path = r"/Users/phuong/Documents/GitHub/KI-BigData/Parteiprogramme/epub-ordner/HTML/linke"
+folder_path = r"/Users/phuong/Documents/GitHub/KIAndBigData/KI-BigData/Parteiprogramme/epub-ordner/HTML/linke"
 with open('linkedata.csv', 'a', newline='', encoding='utf-8') as csvfile:
   csv_writer = csv.writer(csvfile)
   csv_writer.writerow(['Titel', 'Paragraph'])
