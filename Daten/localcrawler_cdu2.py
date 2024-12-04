@@ -1,13 +1,15 @@
-DEBUG_ATTACHMENT_MARKER_ROWNUMBER_OK = '\033[93m[Zeilennummer entfernt]\033[0m'
-DEBUG_ATTACHMENT_MARKER_ROWNUMBER_ERROR = '\033[91m[Error: Zeilennummer nicht gefunden!]\033[0m'
-DEBUG_ATTACHMENT_MARKER_MINUS = '\033[93m[Minus entfernt]\033[0m'
-DEBUG_ATTACHMENT_MARKER_SEITENNUMMER = '\033[93m[Seitenzahl entfernt]\033[0m'
+DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND = "'\033[94m[Zeilennummer entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND = "'\033[93m[Zeilennummer noch nicht gefunden...]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_MINUS = "'\33[101m[Minus entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_SEITENZAHL = "'\33[95m[Seitenzahl entfernt]\033[0m'"
 
-start_row_counter = -13
+row_counter = -13
+row_number_counter = 1
 
 
-def cleanUp(text, debug):
-    global start_row_counter
+def cleanUp(text, debug=False):
+    global row_counter
+    global row_number_counter
 
     if text is None:
         return "ERROR: Text was empty"
@@ -37,6 +39,8 @@ def cleanUp(text, debug):
         if debug:
             print(f"\033[92mProcessing line {index + 1}:\033[0m")
             print(line_clean_3)
+        else:
+            print(line_clean_3)
         #print(line)
         #start_row_counter += 1
 
@@ -46,23 +50,30 @@ def cleanUp(text, debug):
 
 
 
-def line_remove_rownumbers(line, debug):
-    global start_row_counter
+def line_remove_rownumbers(line, debug=False):
+    global row_counter
+    global row_number_counter
     start_to_count = False
 
-    if start_row_counter >= 0:
+    if row_counter >= 0:
         start_to_count = True
-    n = start_row_counter
 
-    if line.strip().endswith(str(n)) and start_to_count:
-        numbers_length = len(str(n))
+    n = row_number_counter
+    end = str(n)
+    line = line.strip()
+
+    if line.endswith(end) and start_to_count:
+        numbers_length = len(end)
         line = line[:-numbers_length].rstrip()
         if debug:
-            line += DEBUG_ATTACHMENT_MARKER_ROWNUMBER_OK
+            print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND
+                  + ", n = " + end + ", start-counter = " + str(row_number_counter))
+        row_number_counter += 1
     elif debug:
-        line += DEBUG_ATTACHMENT_MARKER_ROWNUMBER_ERROR + ", n = " + str(n)
+        print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND
+              + ", n = " + end + ", start-counter = " + str(row_number_counter))
 
-    start_row_counter += 1
+    row_counter += 1
 
     return line
 
@@ -71,19 +82,20 @@ def line_remove_rownumbers(line, debug):
 
 
 
-def line_remove_minus(line, debug):
-    if line.endswith('-'):
-        line = (line[:-1])
+def line_remove_minus(line_given, debug=False):
+    line_given = line_given.strip()
+
+    if debug and len(line_given) > 0:
+        print(f"Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(line_given[-1]))
+
+    if line_given.endswith("-"):
+        line_given = (line_given[:-1])
         if debug:
-            line += DEBUG_ATTACHMENT_MARKER_MINUS
-    elif line.endswith('-' + DEBUG_ATTACHMENT_MARKER_ROWNUMBER_OK):
-        line = (line[:-1] + DEBUG_ATTACHMENT_MARKER_ROWNUMBER_OK)
-    elif line.endswith('-' + DEBUG_ATTACHMENT_MARKER_ROWNUMBER_ERROR):
-        line = (line[:-1] + DEBUG_ATTACHMENT_MARKER_ROWNUMBER_ERROR)
-    return line
+            print(DEBUG_ATTACHMENT_MARKER_MINUS)
+    return line_given
 
 
-def line_remove_seitenzahl(text, debug):
+def line_remove_seitenzahl(text, debug=False):
     if isinstance(text, str):
         if "Seite" in text:
             #if (debug):
@@ -102,7 +114,9 @@ def line_remove_seitenzahl(text, debug):
                     i += 5
                     while position + i < len(text) and text[position + i].isdigit():  #text[position + i].isdigit():
                         i += 1
-            text = text[:position] + DEBUG_ATTACHMENT_MARKER_SEITENNUMMER + text[position + i + 6:]
+            text = text[:position] + text[position + i + 6:]
+            if debug:
+                print(DEBUG_ATTACHMENT_MARKER_SEITENZAHL)
         return text
     else:
         return text
@@ -4106,5 +4120,5 @@ geasügle
 """
 
 
-output = cleanUp(input_text, True)
+output = cleanUp(input_text)
 print("Cleaned Text: " + output)
