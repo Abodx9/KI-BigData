@@ -8,8 +8,50 @@ row_counter = -13
 row_number_counter = 1
 
 
-def create_Inhaltsverzeichnis(lines_output):
-    pass
+def create_Inhaltsverzeichnis(data, limit_max, limit_min):
+    counter = limit_min
+    index_inhvz = counter
+    limit = limit_max
+
+    inhaltsverzeichnis = []
+    inhvz_line_cached = ""
+
+    while counter < limit and index_inhvz < (len(data)):
+        index_inhvz = counter
+        inhvz_line = data[index_inhvz]
+        if isVerzeichnisEntry(inhvz_line):
+            inhaltsverzeichnis.append(inhvz_line)
+            counter += 1
+        if isVerzeichnisEntry_part_front(inhvz_line, data):
+            inhvz_line_cached = inhvz_line  # fill cache
+            # no counter increase yet
+        if isVerzeichnisEntry_part_back(inhvz_line, inhvz_line_cached):
+            inhvz_line = inhvz_line + inhvz_line_cached
+            inhaltsverzeichnis.append(inhvz_line)
+            counter += 1
+            inhvz_line_cached = ""  # reset cache
+
+    return inhaltsverzeichnis
+
+def isVerzeichnisEntry(inhvz_line):
+    return has_entry_part_front(inhvz_line) and has_entry_part_back(inhvz_line)
+
+def isVerzeichnisEntry_part_front(inhvz_line, cached_line):
+    return has_entry_part_front(inhvz_line) and cached_line == ""
+
+
+def isVerzeichnisEntry_part_back(inhvz_line, cached_line):
+    return has_entry_part_back(inhvz_line) and cached_line != ""
+
+
+def has_entry_part_front(inhvz_line):
+    return inhvz_line[0].isdigit() and (inhvz_line[1] == '.' or inhvz_line[2] == '.')
+
+
+def has_entry_part_back(inhvz_line):
+    return inhvz_line[-1].isdigit() and inhvz_line[-5] == '.' and ".........." in inhvz_line
+
+
 
 
 def cleanUp(text, debug=False):
@@ -19,7 +61,7 @@ def cleanUp(text, debug=False):
     if text is None:
         return "ERROR: Text was empty"
 
-    lines_output = []
+    output_raw_cleaned = []
     lines = text.split('\n')
 
     # leere Zeilen löschen
@@ -30,7 +72,7 @@ def cleanUp(text, debug=False):
     # remove dots maybe
     #print(inhaltsverzeichnis)
 
-    lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
+    #lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
 
     for index, line in enumerate(lines):
         # Entfernen...
@@ -43,7 +85,7 @@ def cleanUp(text, debug=False):
         # Punkte
         line_clean_4 = line_remove_dots(line_clean_3, debug)
 
-        lines_output.append(line_clean_4)
+        output_raw_cleaned.append(line_clean_4)
 
         line_clean_4 = line_clean_4.strip()
         if debug and line_clean_4 != "":
@@ -54,12 +96,12 @@ def cleanUp(text, debug=False):
         #elif not debug and line_clean_4 != "":
         #    print(line_clean_4)
 
-    while "" in lines_output:
-        lines_output.remove("")
+    while "" in output_raw_cleaned:
+        output_raw_cleaned.remove("")
 
-    #create_Inhaltsverzeichnis(lines_output)
+    #create_Inhaltsverzeichnis(output_raw_cleaned)
 
-    return lines_output
+    return output_raw_cleaned
 
 
 def line_remove_dots(input, debug):
@@ -4131,6 +4173,6 @@ geasügle
 
 output = cleanUp(input_text, True)
 for index, line in enumerate(output):
-    if index > 9:
+    if 3 < index <= 80:
         print(line)
 #print("Cleaned Text: " + str(output))
