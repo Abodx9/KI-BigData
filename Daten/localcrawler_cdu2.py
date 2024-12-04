@@ -1,203 +1,3 @@
-DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND = "'\033[94m[Zeilennummer entfernt]\033[0m'"
-DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND = "'\033[93m[Zeilennummer noch nicht gefunden...]\033[0m'"
-DEBUG_ATTACHMENT_MARKER_MINUS = "'\33[101m[Minus entfernt]\033[0m'"
-DEBUG_ATTACHMENT_MARKER_SEITENZAHL = "'\33[95m[Seitenzahl entfernt]\033[0m'"
-DEBUG_ATTACHMENT_MARKER_DOT = "'\33[105m[Aufzählungspunkt entfernt]\033[0m'"
-
-row_counter = -13
-row_number_counter = 1
-
-
-def create_Inhaltsverzeichnis(data, limit_max, limit_min):
-    counter = limit_min
-    index_inhvz = counter
-    limit = limit_max
-
-    inhaltsverzeichnis = []
-    inhvz_line_cached = ""
-
-    while counter < limit and index_inhvz < (len(data)):
-        index_inhvz = counter
-        inhvz_line = data[index_inhvz]
-        if isVerzeichnisEntry(inhvz_line):
-            inhaltsverzeichnis.append(inhvz_line)
-            counter += 1
-        if isVerzeichnisEntry_part_front(inhvz_line, data):
-            inhvz_line_cached = inhvz_line  # fill cache
-            # no counter increase yet
-        if isVerzeichnisEntry_part_back(inhvz_line, inhvz_line_cached):
-            inhvz_line = inhvz_line + inhvz_line_cached
-            inhaltsverzeichnis.append(inhvz_line)
-            counter += 1
-            inhvz_line_cached = ""  # reset cache
-
-    return inhaltsverzeichnis
-
-def isVerzeichnisEntry(inhvz_line):
-    return has_entry_part_front(inhvz_line) and has_entry_part_back(inhvz_line)
-
-def isVerzeichnisEntry_part_front(inhvz_line, cached_line):
-    return has_entry_part_front(inhvz_line) and cached_line == ""
-
-
-def isVerzeichnisEntry_part_back(inhvz_line, cached_line):
-    return has_entry_part_back(inhvz_line) and cached_line != ""
-
-
-def has_entry_part_front(inhvz_line):
-    return inhvz_line[0].isdigit() and (inhvz_line[1] == '.' or inhvz_line[2] == '.')
-
-
-def has_entry_part_back(inhvz_line):
-    return inhvz_line[-1].isdigit() and inhvz_line[-5] == '.' and ".........." in inhvz_line
-
-
-
-
-def cleanUp(text, debug=False):
-    global row_counter
-    global row_number_counter
-
-    if text is None:
-        return "ERROR: Text was empty"
-
-    output_raw_cleaned = []
-    lines = text.split('\n')
-
-    # leere Zeilen löschen
-    lines = [line for line in lines if line.strip() != "" and line.strip() != "Inhaltsverzeichnis"]
-
-    # Inhaltsverzeichnis erstellen - For headline-recognition
-    inhaltsverzeichnis = [line for line in lines if "......" in line]
-    # remove dots maybe
-    #print(inhaltsverzeichnis)
-
-    #lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
-
-    for index, line in enumerate(lines):
-        # Entfernen...
-        # Zeilennummern
-        line_clean_1 = line_remove_rownumbers(line, debug)
-        # Trennzeichen
-        line_clean_2 = line_remove_minus(line_clean_1, debug)
-        # Seitenzahlen
-        line_clean_3 = line_remove_seitenzahl(line_clean_2, debug)
-        # Punkte
-        line_clean_4 = line_remove_dots(line_clean_3, debug)
-
-        output_raw_cleaned.append(line_clean_4)
-
-        line_clean_4 = line_clean_4.strip()
-        if debug and line_clean_4 != "":
-            print(
-                f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          " + line_clean_4 + "\033[0m" + "")
-            #print("\33[31m"+line_clean_4+"\033[0m")
-            #print("Processed line: "+"\33[92m"+line_clean_4+"\033[0m")
-        #elif not debug and line_clean_4 != "":
-        #    print(line_clean_4)
-
-    while "" in output_raw_cleaned:
-        output_raw_cleaned.remove("")
-
-    #create_Inhaltsverzeichnis(output_raw_cleaned)
-
-    return output_raw_cleaned
-
-
-def line_remove_dots(input, debug):
-    text = input
-    if "• " in text:
-        text = text.replace("• ", "")
-        if debug:
-            print(DEBUG_ATTACHMENT_MARKER_DOT)
-        return text
-    else:
-        return text
-
-
-def line_remove_rownumbers(line, debug=False):
-    global row_counter
-    global row_number_counter
-    start_to_count = False
-
-    if row_counter >= 0:
-        start_to_count = True
-
-    n = row_number_counter
-    end = str(n)
-    line = line.strip()
-
-    if line.endswith(end) and start_to_count:
-        numbers_length = len(end)
-        line = line[:-numbers_length].rstrip()
-        if debug:
-            print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND
-                  + ": n = " + end + ", start-counter = " + str(row_number_counter))
-        row_number_counter += 1
-    elif debug:
-        print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND
-              + ", n = " + end + ", start-counter = " + str(row_number_counter))
-
-    row_counter += 1
-
-    return line
-
-
-def line_remove_minus(line_given, debug=False):
-    line_given = line_given.strip()
-
-    if line_given.endswith("-"):
-        if debug and len(line_given) > 0:
-            print(
-                f"{DEBUG_ATTACHMENT_MARKER_MINUS}: Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(
-                    line_given[-1]))
-        line_given = (line_given[:-1])
-
-    return line_given
-
-
-def line_remove_seitenzahl(text, debug=False):
-    if isinstance(text, str):
-        if "Seite" in text:
-            #if (debug):
-            #print("Wort 'Seite' in Text.")
-            position = text.index("Seite")
-            i = 0
-            while position + i + 6 < len(text) and text[position + i + 6].isdigit():
-                #if (debug):
-                #print("i = " + str(i))  # + " = " + str(text[i+6]))
-                i += 1
-
-                # suche "von", schneide ebenfalls ab
-                if text[position + i + 6:position + i + 11] == " von " and text[position + i + 11].isdigit():
-                    #if (debug):
-                    #print(DEBUG_ATTACHMENT_MARKER_SEITENNUMMER)
-                    i += 5
-                    while position + i < len(text) and text[position + i].isdigit():  #text[position + i].isdigit():
-                        i += 1
-            text = text[:position] + text[position + i + 6:]
-            if debug:
-                print(DEBUG_ATTACHMENT_MARKER_SEITENZAHL)
-        return text
-    else:
-        return text
-
-
-#awodihawoihdb Seite 5 von 5
-
-
-def remove_numbers(text):
-    if not text.isDigit():
-        index = len(text)
-        while index > 0 and index > len(text) - 5 and (text[index - 1].isdigit() or text[index - 1] == '-'):
-            index -= 1
-            #print("index:"+text[index])
-        #print(text)
-        return text[:index]
-    else:
-        return ''
-
-
 input_text = """Das Programm für Stabilität
 
 und Erneuerung.
@@ -4094,85 +3894,240 @@ men, damit bis 2050 weltweit CO2-Neutralität erreicht wird.
 
 1357"""
 
-input_text2 = """1. Neue Verantwortung Deutschlands in der Welt – aus Überzeugung für
-Frieden, Freiheit und Menschenrechte
-66
-67
-68
-69
-70
-71Unser Unions-Versprechen: Wir arbeiten für ein weltoffenes Deutschland, das in einem Bündnis
-von Demokratien gemeinsam mit unseren transatlantischen und europäischen Partnern die glo-
-balen Herausforderungen gestaltet. Unser Ziel heißt: Sicherheit und Frieden, Freiheit und Wohl-
-stand für die Menschen in Deutschland. Das Modernisierungsjahrzehnt, mit dem wir Deutsch-
-land weltpolitikfähig machen, kann nur mit neuer außenpolitischer Stärke gelingen.
-72
-73
-74
-75Die Pandemie hat uns erneut gezeigt, wie vernetzt unsere Welt ist. Weder das Coronavirus noch
-der Klimawandel oder die digitale Transformation machen an Grenzen halt. Wir können die gro-
-ßen weltweiten Menschheitsaufgaben nur lösen, wenn wir sie gemeinsam global anpacken. Es
-ist in unserem eigenen Interesse, dass wir international mehr Verantwortung übernehmen.
-76
-77
-78
-79
-80
-81
-82Die Bedingungen dafür haben sich gravierend verändert: Wir befinden uns inmitten eines welt-
-weiten Epochenwechsels. Die große wirtschaftliche Dynamik in Asien und der Aufstieg Chinas
-verändern das internationale Machtgefüge. Wir erleben die Missachtung des Völkerrechts und
-Regelbrüche durch bedeutende Staaten des internationalen Systems, und wir sehen, dass sich
-weltweit populistische Strömungen ausbreiten, auch in demokratischen Staaten. Hinzu kommt:
-Neue Technologien bestimmen nicht nur unseren Alltag, sondern sind auch ein relevanter Faktor
-der internationalen Politik.
-83
-84
-85
-86
-87
-88Es reicht nicht, auf Krisen nur zu reagieren. Daher werden wir eine Sicherheitsarchitektur schaf-
-fen, die bessere Koordinierung und einen vorausschauenden strategischen Ansatz möglich
-macht. Die Grundlage unseres weltweiten politischen Handelns ist und bleibt dabei das christli-
-che Menschenbild. Wir bekennen uns dazu, dass Deutschland aktiv zur internationalen Krisen-
-bewältigung und zur Gestaltung der Weltordnung beiträgt - in der Europäischen Union, der
-NATO, den Vereinten Nationen und weiteren internationalen Organisationen.
-89
-901.1. Stärkung der werte- und regelbasierten internationalen Ordnung
-91Bündnis der Demokratien schmieden
-92
-93
-94
-95
-96
-97
-98
-99Demokratien und autoritäre Staaten ringen um den globalen Gestaltungsanspruch im 21.
-Jahrhundert. Es geht um den Fortbestand unserer freiheitlich-demokratischen Ordnung, die
-autoritäre Staaten in Frage stellen und zu destabilisieren versuchen. Aus dieser Systemri-
-valität ergeben sich für uns die Verpflichtung und der Anspruch, die internationale regel-
-und wertebasierte Ordnung wieder zu stärken. Denn sie ist Voraussetzung dafür, dass wir
-in Sicherheit und Frieden, Freiheit und Wohlstand leben können. Wir wollen, dass Deutsch-
-land und Europa gestärkt aus dieser Herausforderung hervorgehen – gemeinsam mit den
-USA und zugleich auf eigene Fähigkeiten bedacht."""  #input("Gib den Text ein: ")
+DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND = "'\033[94m[Zeilennummer entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND = "'\033[93m[Zeilennummer noch nicht gefunden...]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_MINUS = "'\33[101m[Minus entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_SEITENZAHL = "'\33[95m[Seitenzahl entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_DOT = "'\33[105m[Aufzählungspunkt entfernt]\033[0m'"
 
-input_text_test = """a
-b
-c
-
-e-
+row_counter = -13
+row_number_counter = 1
 
 
-e
-f
-awdadw ersg Seite 3 von 7s geg 
-aw
-Seite 3 von 73444
-geasügle
-"""
+def cleanUp(text, debug=False):
+    global row_counter
+    global row_number_counter
 
-output = cleanUp(input_text, True)
-for index, line in enumerate(output):
-    if 3 < index <= 80:
-        print(line)
-#print("Cleaned Text: " + str(output))
+    if text is None:
+        return "ERROR: Text was empty"
+
+    output_raw_cleaned = []
+    lines = text.split('\n')
+
+    # leere Zeilen löschen
+    lines = [line for line in lines if line.strip() != "" and line.strip() != "Inhaltsverzeichnis"]
+
+    # Inhaltsverzeichnis erstellen - For headline-recognition
+    #inhaltsverzeichnis = [line for line in lines if "......" in line]
+    # remove dots maybe
+    #print(inhaltsverzeichnis)
+
+    #lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
+
+    for index, line in enumerate(lines):
+        # Entfernen...
+        # Zeilennummern
+        line_clean_1 = line_remove_rownumbers(line, debug)
+        # Trennzeichen
+        line_clean_2 = line_remove_minus(line_clean_1, debug)
+        # Seitenzahlen
+        line_clean_3 = line_remove_seitenzahl(line_clean_2, debug)
+        # Punkte
+        line_clean_4 = line_remove_dots(line_clean_3, debug)
+
+        output_raw_cleaned.append(line_clean_4)
+
+        line_clean_4 = line_clean_4.strip()
+        if debug and line_clean_4 != "":
+            print(
+                f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          " + line_clean_4 + "\033[0m" + "")
+
+    while "" in output_raw_cleaned:
+        output_raw_cleaned.remove("")
+
+    return output_raw_cleaned
+
+
+def line_remove_dots(input, debug):
+    text = input
+    if "• " in text:
+        text = text.replace("• ", "")
+        if debug:
+            print(DEBUG_ATTACHMENT_MARKER_DOT)
+        return text
+    else:
+        return text
+
+
+def line_remove_rownumbers(line, debug=False):
+    global row_counter
+    global row_number_counter
+    start_to_count = False
+
+    if row_counter >= 0:
+        start_to_count = True
+
+    n = row_number_counter
+    end = str(n)
+    line = line.strip()
+
+    if line.endswith(end) and start_to_count:
+        numbers_length = len(end)
+        line = line[:-numbers_length].rstrip()
+        if debug:
+            print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND
+                  + ": n = " + end + ", start-counter = " + str(row_number_counter))
+        row_number_counter += 1
+    elif debug:
+        print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND
+              + ", n = " + end + ", start-counter = " + str(row_number_counter))
+
+    row_counter += 1
+
+    return line
+
+
+def line_remove_minus(line_given, debug=False):
+    line_given = line_given.strip()
+
+    if line_given.endswith("-"):
+        if debug and len(line_given) > 0:
+            print(
+                f"{DEBUG_ATTACHMENT_MARKER_MINUS}: Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(
+                    line_given[-1]))
+        line_given = (line_given[:-1])
+
+    return line_given
+
+
+def line_remove_seitenzahl(text, debug=False):
+    if isinstance(text, str):
+        if "Seite" in text:
+            position = text.index("Seite")
+            i = 0
+            while position + i + 6 < len(text) and text[position + i + 6].isdigit():
+                i += 1
+
+                # suche "von", schneide ebenfalls ab
+                if text[position + i + 6:position + i + 11] == " von " and text[position + i + 11].isdigit():
+                    i += 5
+                    while position + i < len(text) and text[position + i].isdigit():
+                        i += 1
+            text = text[:position] + text[position + i + 6:]
+            if debug:
+                print(DEBUG_ATTACHMENT_MARKER_SEITENZAHL)
+        return text
+    else:
+        return text
+
+
+def remove_numbers(text):
+    if not text.isDigit():
+        index = len(text)
+        while index > 0 and index > len(text) - 5 and (text[index - 1].isdigit() or text[index - 1] == '-'):
+            index -= 1
+        return text[:index]
+    else:
+        return ''
+
+#### Inhaltsverzeichnis
+def create_Inhaltsverzeichnis(data, limit_min, limit_max, ignore):
+    counter = limit_min
+    index_inhvz = counter
+    limit = limit_max
+
+    inhaltsverzeichnis_dirty = []
+    inhvz_line_cached = ""
+
+    # extract headings from raw list
+    # puts multi-line-headings into one appending
+    # Extract headings from raw list
+    # Puts multi-line-headings into one appending
+    while counter < limit and index_inhvz < (len(data)):
+        index_inhvz = counter
+        inhvz_line = data[counter]
+
+        if isVerzeichnisEntry_part_front(inhvz_line, data):
+            # Start of multi-line heading, cache the front part
+            inhvz_line_cached = inhvz_line  # Fill cache
+            # No counter increase yet, wait for the back part
+
+        elif isVerzeichnisEntry_part_back(inhvz_line, inhvz_line_cached):
+            # End of multi-line heading, merge the front and back parts
+            inhvz_line = inhvz_line_cached + inhvz_line
+            inhaltsverzeichnis_dirty.append(inhvz_line)
+            inhvz_line_cached = ""  # Reset cache
+            counter += 1  # Increment counter after successfully combining
+
+        elif isVerzeichnisEntry(inhvz_line):
+            # Single-line heading (no need to cache)
+            inhaltsverzeichnis_dirty.append(inhvz_line)
+            counter += 1  # Increment counter after adding
+
+        else:
+            # Continue processing next line
+            counter += 1
+
+    # find equal headings from (inhaltsverzeichnis_dirty) in raw text (data)-> safe indices in list
+    # removes dots and numbers from headings -> clean
+    heading_indices_in_raw = []
+    inhaltsverzeichnis_clean = []
+    for heading in inhaltsverzeichnis_dirty:
+        for index_raw, raw_heading in enumerate(shorten_list(data, ignore, 0)):  # oder data[70:]
+            if heading in raw_heading:
+                heading_indices_in_raw.append(index_raw+ignore)  # speichere indices der headings in raw_data in liste
+                inhaltsverzeichnis_clean.append(heading)  # füge heading ohne "..." aus raw_data hinzu
+
+
+    return inhaltsverzeichnis_clean, heading_indices_in_raw
+
+
+def isVerzeichnisEntry(inhvz_line):
+    return has_entry_part_front(inhvz_line) and has_entry_part_back(inhvz_line)
+
+
+def isVerzeichnisEntry_part_front(inhvz_line, cached_line):
+    return has_entry_part_front(inhvz_line) and cached_line == ""
+
+
+def isVerzeichnisEntry_part_back(inhvz_line, cached_line):
+    return has_entry_part_back(inhvz_line) and cached_line != ""
+
+
+def has_entry_part_front(inhvz_line):
+    return inhvz_line[0].isdigit() and (inhvz_line[1] == '.' or inhvz_line[2] == '.')
+
+
+def has_entry_part_back(inhvz_line):
+    return inhvz_line[-1].isdigit() and inhvz_line[-5] == '.' and ".........." in inhvz_line
+
+
+def shorten_list(input_list, start, end):
+    if end == 0:
+        end = len(input_list)-1
+    output_list = []
+    for index, line in enumerate(input_list):
+        if start < index <= end:
+            output_list.append(line)
+    return output_list
+
+
+def make_string_from_list(input_list):
+    output_string = ""
+    for index, line in enumerate(input_list):
+        output_string += line + "\n"
+    return output_string
+
+
+debug = False
+# create raw cleaned list of text
+output = cleanUp(input_text, debug)
+# create inhaltsverzeichnis from list
+inhaltsverzeichnis_raw = shorten_list(output, 3, 80)
+if debug:
+    print(make_string_from_list(inhaltsverzeichnis_raw))
+inhaltsverzeichnis_clean = create_Inhaltsverzeichnis(output, 3, 80, 50)
+print(inhaltsverzeichnis_clean)
+
+
+
