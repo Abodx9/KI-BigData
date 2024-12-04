@@ -1,0 +1,26 @@
+function cleanData() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+
+  var combinedData = "";
+
+  // Loop through each row
+  for (var i = 1; i <= lastRow; i++) {
+    var valueA = sheet.getRange(i, 1).getValue(); // Get value from column A
+    var valueB = sheet.getRange(i, 2).getValue(); // Get value from column B
+
+    if (valueB !== "") {
+      if (combinedData !== "") {
+        sheet.getRange(i, 1).setValue(combinedData.trim());
+        combinedData = ""; // Reset the accumulator
+      }
+    } else {
+
+      if (valueA !== "") {
+        combinedData += valueA + " ";
+        sheet.getRange(i, 1).clearContent(); // Clear the original cell in A
+      }
+    }
+  }
+
+}
