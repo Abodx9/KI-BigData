@@ -2,9 +2,14 @@ DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND = "'\033[94m[Zeilennummer entfernt]\033[
 DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND = "'\033[93m[Zeilennummer noch nicht gefunden...]\033[0m'"
 DEBUG_ATTACHMENT_MARKER_MINUS = "'\33[101m[Minus entfernt]\033[0m'"
 DEBUG_ATTACHMENT_MARKER_SEITENZAHL = "'\33[95m[Seitenzahl entfernt]\033[0m'"
+DEBUG_ATTACHMENT_MARKER_DOT = "'\33[105m[Aufzählungspunkt entfernt]\033[0m'"
 
 row_counter = -13
 row_number_counter = 1
+
+
+def create_Inhaltsverzeichnis(lines_output):
+    pass
 
 
 def cleanUp(text, debug=False):
@@ -29,23 +34,43 @@ def cleanUp(text, debug=False):
 
 
     for index, line in enumerate(lines):
-        #Zeilennummern entfernen
+        # Entfernen...
+        # Zeilennummern
         line_clean_1 = line_remove_rownumbers(line, debug)
-        #Minus entfernen
+        # Trennzeichen
         line_clean_2 = line_remove_minus(line_clean_1, debug)
-        #Seitenzahlen entfernen
+        # Seitenzahlen
         line_clean_3 = line_remove_seitenzahl(line_clean_2, debug)
-        lines_output.append(line_clean_3)
-        if debug:
-            print(f"\033[92mProcessing line {index + 1}:\033[0m")
-            print(line_clean_3)
-        else:
-            print(line_clean_3)
-        #print(line)
-        #start_row_counter += 1
+        # Punkte
+        line_clean_4 = line_remove_dots(line_clean_3, debug)
 
-    lines_output_str = str(lines_output)
-    return lines_output_str
+
+        lines_output.append(line_clean_4)
+
+        line_clean_4 = line_clean_4.strip()
+        if debug and line_clean_4 != "":
+            print(f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          "+line_clean_4+"\033[0m"+"")
+            #print("\33[31m"+line_clean_4+"\033[0m")
+            #print("Processed line: "+"\33[92m"+line_clean_4+"\033[0m")
+        #elif not debug and line_clean_4 != "":
+        #    print(line_clean_4)
+
+    while "" in lines_output:
+        lines_output.remove("")
+
+    #create_Inhaltsverzeichnis(lines_output)
+
+    return lines_output
+
+def line_remove_dots(input, debug):
+    text = input
+    if "• " in text:
+        text = text.replace("• ", "")
+        if debug:
+            print(DEBUG_ATTACHMENT_MARKER_DOT)
+        return text
+    else:
+        return text
 
 
 
@@ -67,7 +92,7 @@ def line_remove_rownumbers(line, debug=False):
         line = line[:-numbers_length].rstrip()
         if debug:
             print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_FOUND
-                  + ", n = " + end + ", start-counter = " + str(row_number_counter))
+                  + ": n = " + end + ", start-counter = " + str(row_number_counter))
         row_number_counter += 1
     elif debug:
         print(DEBUG_ATTACHMENT_MARKER_ROWNUMBER_NOT_FOUND
@@ -86,12 +111,12 @@ def line_remove_minus(line_given, debug=False):
     line_given = line_given.strip()
 
     if debug and len(line_given) > 0:
-        print(f"Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(line_given[-1]))
+        print()
+        print(f"{DEBUG_ATTACHMENT_MARKER_MINUS}: Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(line_given[-1]))
 
     if line_given.endswith("-"):
         line_given = (line_given[:-1])
-        if debug:
-            print(DEBUG_ATTACHMENT_MARKER_MINUS)
+
     return line_given
 
 
@@ -123,13 +148,6 @@ def line_remove_seitenzahl(text, debug=False):
 
 
 #awodihawoihdb Seite 5 von 5
-
-def remove_dots(text):
-    if "• " in text:
-        text = text.replace("• ", "")
-        return text
-    else:
-        return text
 
 
 def remove_numbers(text):
@@ -4120,5 +4138,8 @@ geasügle
 """
 
 
-output = cleanUp(input_text)
-print("Cleaned Text: " + output)
+output = cleanUp(input_text, False)
+for index, line in enumerate(output):
+    if index > 9:
+        print(line)
+#print("Cleaned Text: " + str(output))
