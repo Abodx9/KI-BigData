@@ -32,7 +32,6 @@ def cleanUp(text, debug=False):
 
     lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
 
-
     for index, line in enumerate(lines):
         # Entfernen...
         # Zeilennummern
@@ -44,12 +43,12 @@ def cleanUp(text, debug=False):
         # Punkte
         line_clean_4 = line_remove_dots(line_clean_3, debug)
 
-
         lines_output.append(line_clean_4)
 
         line_clean_4 = line_clean_4.strip()
         if debug and line_clean_4 != "":
-            print(f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          "+line_clean_4+"\033[0m"+"")
+            print(
+                f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          " + line_clean_4 + "\033[0m" + "")
             #print("\33[31m"+line_clean_4+"\033[0m")
             #print("Processed line: "+"\33[92m"+line_clean_4+"\033[0m")
         #elif not debug and line_clean_4 != "":
@@ -62,6 +61,7 @@ def cleanUp(text, debug=False):
 
     return lines_output
 
+
 def line_remove_dots(input, debug):
     text = input
     if "• " in text:
@@ -71,8 +71,6 @@ def line_remove_dots(input, debug):
         return text
     else:
         return text
-
-
 
 
 def line_remove_rownumbers(line, debug=False):
@@ -103,18 +101,14 @@ def line_remove_rownumbers(line, debug=False):
     return line
 
 
-
-
-
-
 def line_remove_minus(line_given, debug=False):
     line_given = line_given.strip()
 
-    if debug and len(line_given) > 0:
-        print()
-        print(f"{DEBUG_ATTACHMENT_MARKER_MINUS}: Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(line_given[-1]))
-
     if line_given.endswith("-"):
+        if debug and len(line_given) > 0:
+            print(
+                f"{DEBUG_ATTACHMENT_MARKER_MINUS}: Zeile endet auf '-' ?: {line_given[-1] == '-'}" + " Letztes Zeichen: " + str(
+                    line_given[-1]))
         line_given = (line_given[:-1])
 
     return line_given
@@ -124,18 +118,18 @@ def line_remove_seitenzahl(text, debug=False):
     if isinstance(text, str):
         if "Seite" in text:
             #if (debug):
-                #print("Wort 'Seite' in Text.")
+            #print("Wort 'Seite' in Text.")
             position = text.index("Seite")
             i = 0
             while position + i + 6 < len(text) and text[position + i + 6].isdigit():
                 #if (debug):
-                    #print("i = " + str(i))  # + " = " + str(text[i+6]))
+                #print("i = " + str(i))  # + " = " + str(text[i+6]))
                 i += 1
 
                 # suche "von", schneide ebenfalls ab
                 if text[position + i + 6:position + i + 11] == " von " and text[position + i + 11].isdigit():
                     #if (debug):
-                        #print(DEBUG_ATTACHMENT_MARKER_SEITENNUMMER)
+                    #print(DEBUG_ATTACHMENT_MARKER_SEITENNUMMER)
                     i += 5
                     while position + i < len(text) and text[position + i].isdigit():  #text[position + i].isdigit():
                         i += 1
@@ -4058,8 +4052,6 @@ men, damit bis 2050 weltweit CO2-Neutralität erreicht wird.
 
 1357"""
 
-
-
 input_text2 = """1. Neue Verantwortung Deutschlands in der Welt – aus Überzeugung für
 Frieden, Freiheit und Menschenrechte
 66
@@ -4137,8 +4129,7 @@ Seite 3 von 73444
 geasügle
 """
 
-
-output = cleanUp(input_text, False)
+output = cleanUp(input_text, True)
 for index, line in enumerate(output):
     if index > 9:
         print(line)
