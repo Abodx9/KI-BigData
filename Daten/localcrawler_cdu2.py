@@ -14223,25 +14223,38 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
 
     #print(len(data_shortened))
     #print("\n" + str(len(headlines_plain)))
+    #for entry in data_shortened:
+    #    print(entry)
     counter = 0
+    #### finde entry in data_shortened
     for entry in headlines_plain:  # iteriere inhaltsverzeichnis ohne Punkte
         found = False
-        for index_in_data, entry_in_data in enumerate(
-                data_shortened):  # oder data[70:]  # iteriere über gekürzte raw-Daten
-
-            if entry in entry_in_data:  # wenn heading gefunden
-                heading_index_found_in_data.append(
-                    index_in_data + start_data_from_index_on)  # speichere indices der headings aus raw_data in liste
-                print("\n")
-                print("Zeile                #" + str(index_in_data))
-                print("Original-Inhalt:     " + str(entry_in_data))
-                print("Headline-Inhalt:     " + str(entry))
-                vz_cleaned.append(entry)  # speichere Eintrag an ^index in vz_cleaned
+        for index_in_data, entry_in_data in enumerate(data_shortened):  # iteriere über gekürzte raw-Daten
+            # Direkter Vergleich
+            if entry in entry_in_data:
+                heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
+                print(f"\nZeile                #{index_in_data}")
+                print(f"Original-Inhalt:     {entry_in_data}")
+                print(f"Headline-Inhalt:     {entry}")
+                vz_cleaned.append(entry)
                 found = True
+                break
 
+            # Fallback: Vergleiche erste 60 Zeichen
+            elif entry[:60] in entry_in_data:
+                heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
+                print(f"\n--- zweizeilig ---:")
+                print(f"Zeile                #{index_in_data}")
+                print(f"Original-Inhalt:     {entry_in_data}")
+                print(f"Headline-Inhalt:     {entry}")
+                vz_cleaned.append(entry)
+                found = True
+                break  # Keine weitere Suche nötig
+
+        # Wenn weder direkter Vergleich noch Fallback erfolgreich war
         if not found:
             counter += 1
-            print("\nNot Found (" + str(counter) + "):       " + str(entry))
+            print(f"\nNot Found ({counter}):       {entry}")
 
     return headlines_plain, vz_cleaned, heading_index_found_in_data
 
@@ -14297,9 +14310,9 @@ def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned,
     index = 0
     while len(inhaltsverzeichnis_done[1]) > index:
         print("\nEintrag #" + str(index) + ":")
-        print(str(inhaltsverzeichnisse[0][index]) + "\n" +
-              str("Headline aus Inhaltsverzeichnis:             " + inhaltsverzeichnisse[1][index]) + "\n" +
-              str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index])+": "
+        print("                                                 "+str(inhaltsverzeichnisse[0][index]) + "\n" +
+              str("Headline aus Inhaltsverzeichnis:                 " + inhaltsverzeichnisse[1][index]) + "\n" +
+              str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index])+":         "
                   + "           " + data[inhaltsverzeichnisse[2][index]]) + "\n")
         index += 1
 
