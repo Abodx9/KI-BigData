@@ -1,4 +1,5 @@
 import re
+import csv
 
 input_text = """Das Programm für Stabilität
 
@@ -14318,9 +14319,34 @@ def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned,
               str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index])+":         "
                   + "           " + data[inhaltsverzeichnisse[2][index]]))
         if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][index] == inhaltsverzeichnisse[3][nextmultiliner]:
-            print(str(data[inhaltsverzeichnisse[2][index]+1]))
+            print(str(data[inhaltsverzeichnisse[2][index]+1])) # finde in data die Zeile nach dem ersten Part des Multiliners
             nextmultiliner += 1
         index += 1
+
+
+def print_all(inhaltsverzeichnisse, data): # TODO WIP
+    zeile = 0
+    condition_ist_heading = zeile != 0
+
+    with open('cdudata_1.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+
+        # Start mit einer leeren Zeile
+        row = ["Titel", "Paragraph"]
+
+        for entry in data:
+            if condition_ist_heading(entry):
+                # Schreibe die aktuelle Zeile und starte eine neue Zeile
+                writer.writerow(row)
+                row = [entry]  # Fange eine neue Zeile an
+            else:
+                # Füge das Element zur aktuellen Zeile hinzu
+                row.append(entry)
+
+        # Schreibe die letzte Zeile, falls noch Daten übrig sind
+        if row:
+            writer.writerow(row)
+
 
 
 #########################################
