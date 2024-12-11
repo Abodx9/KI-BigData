@@ -3925,23 +3925,28 @@ def cleanUp(text, debug=False):
     #lines = [line for line in lines if not "......" in line]  # TODO (erwischt nicht alle)
 
     for index, line in enumerate(lines):
-        # Entfernen...
+
+        # CLEAN lines
+
         # Zeilennummern
         line_clean_1 = line_remove_rownumbers(line, debug)
         # Trennzeichen
         line_clean_2 = line_remove_minus(line_clean_1, debug)
         # Seitenzahlen
-        line_clean_3 = line_remove_seitenzahl(line_clean_2, debug)
+        line_clean_3 = line_remove_pageNumber(line_clean_2, debug)
         # Punkte
         line_clean_4 = line_remove_dots(line_clean_3, debug)
 
+        # ADD
+        line_clean_4 = line_clean_4.strip()
         output_raw_cleaned.append(line_clean_4)
 
-        line_clean_4 = line_clean_4.strip()
+        #DEBUG
         if debug and line_clean_4 != "":
             print(
                 f"\033[32m\n|- Processing line {index + 1}: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -|          " + line_clean_4 + "\033[0m" + "")
 
+    # REMOVE blanc lines
     while "" in output_raw_cleaned:
         output_raw_cleaned.remove("")
 
@@ -4000,7 +4005,7 @@ def line_remove_minus(line_given, debug=False):
     return line_given
 
 
-def line_remove_seitenzahl(text, debug=False):
+def line_remove_pageNumber(text, debug=False):
     if isinstance(text, str):
         if "Seite" in text:
             position = text.index("Seite")
@@ -4021,6 +4026,7 @@ def line_remove_seitenzahl(text, debug=False):
         return text
 
 
+# UNUSED
 def remove_numbers(text):
     if not text.isDigit():
         index = len(text)
@@ -4030,81 +4036,110 @@ def remove_numbers(text):
     else:
         return ''
 
+
 #### Inhaltsverzeichnis
-def create_Inhaltsverzeichnis(data, limit_min, limit_max, ignore):
-    counter = limit_min
-    index_inhvz = counter
+# extract headings from raw list into new list
+# puts multi-line-headings into one appending
+def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_on, ignore_data_from_index_on, debug):
+    data_line_number = limit_min
+    vz_index = data_line_number
     limit = limit_max
+    if limit_max == 0:
+        limit = len(data) - 1 - limit_min
 
-    inhaltsverzeichnis_dirty = []
-    inhvz_line_cached = ""
+    vz_dirty = []
+    vz_line_cached = ""
 
-    # extract headings from raw list
-    # puts multi-line-headings into one appending
-    # Extract headings from raw list
-    # Puts multi-line-headings into one appending
-    while counter < limit and index_inhvz < (len(data)):
-        index_inhvz = counter
-        inhvz_line = data[counter]
+    # remove whitespace
+    data = [entry.strip() for entry in data]
+    while "" in data:
+        data.remove("")
 
-        if isVerzeichnisEntry_part_front(inhvz_line, data):
-            # Start of multi-line heading, cache the front part
-            inhvz_line_cached = inhvz_line  # Fill cache
-            # No counter increase yet, wait for the back part
+    skip_entry = False
+    # FILL vz_dirty
+    while data_line_number < limit and vz_index < (len(data)):
+        vz_index = data_line_number
+        vz_lineContent = data[data_line_number]
 
-        elif isVerzeichnisEntry_part_back(inhvz_line, inhvz_line_cached):
-            # End of multi-line heading, merge the front and back parts
-            inhvz_line = inhvz_line_cached + inhvz_line
-            inhaltsverzeichnis_dirty.append(inhvz_line)
-            inhvz_line_cached = ""  # Reset cache
-            counter += 1  # Increment counter after successfully combining
+        if debug:
+            print("Debug merge multiliners: \nFor line                      " + str(vz_lineContent))
+            print("line ist Front-Part          " + str(isVZEntry_part_front(vz_lineContent, vz_line_cached)) + "")
+            print("line ist Back-Part           " + str(isVZEntry_part_back(vz_lineContent, vz_line_cached)) + "")
+            print("line ist Complete           " + str(isVZEntry(vz_lineContent)) + "")
+            if vz_line_cached != "":
+                print("Cache: " + vz_line_cached)
+            if vz_lineContent == "":
+                print("--- blanc line ---\n")
+            print("\n")
 
-        elif isVerzeichnisEntry(inhvz_line):
+        if isVZEntry(vz_lineContent):
             # Single-line heading (no need to cache)
-            inhaltsverzeichnis_dirty.append(inhvz_line)
-            counter += 1  # Increment counter after adding
+            vz_dirty.append(vz_lineContent)
+            data_line_number += 1  # Increment data_line_number after adding
+
+        elif vz_lineContent != "" and isVZEntry_part_front(vz_lineContent, vz_line_cached):
+            # Start of multi-line heading, cache the front part
+            vz_line_cached = vz_lineContent  # Fill cache
+            # No data_line_number increase yet, wait for the back part
+            data_line_number += 1
+
+        elif vz_lineContent != "" and isVZEntry_part_back(vz_lineContent, vz_line_cached):
+            # End of multi-line heading, merge the front and back parts
+            vz_lineContent = vz_line_cached + " " + vz_lineContent
+            if debug:
+                print("MERGED = " + vz_lineContent + "\n")
+            vz_dirty.append(vz_lineContent)
+            vz_line_cached = ""  # Reset cache
+            data_line_number += 1  # Increment data_line_number after successfully combining
+
+
 
         else:
             # Continue processing next line
-            counter += 1
+            data_line_number += 1
 
-    # find equal headings from (inhaltsverzeichnis_dirty) in raw text (data)-> safe indices in list
+    # FILL vz_clean
+    # find equal headings from (vz_dirty) in raw text (data)-> safe indices in list
     # removes dots and numbers from headings -> clean
-    heading_indices_in_raw = []
-    inhaltsverzeichnis_clean = []
-    for heading in inhaltsverzeichnis_dirty:
-        for index_raw, raw_heading in enumerate(shorten_list(data, ignore, 0)):  # oder data[70:]
-            if heading in raw_heading:
-                heading_indices_in_raw.append(index_raw+ignore)  # speichere indices der headings in raw_data in liste
-                inhaltsverzeichnis_clean.append(heading)  # füge heading ohne "..." aus raw_data hinzu
+    heading_occurrences_in_data = []
+    vz_cleaned = []
+    data_shortened = shorten_list(data, start_data_from_index_on, ignore_data_from_index_on)
+    for entry_heading_in_vz in vz_dirty:                                                # iteriere inhaltsverzeichnis mit Punkten
+        for index_in_data, raw_heading in enumerate(data_shortened):  # oder data[70:]  # iteriere über gekürzte raw-Daten
+            if entry_heading_in_vz in raw_heading:                                      # wenn heading gefunden
+                heading_occurrences_in_data.append(
+                    index_in_data + start_data_from_index_on)                           # speichere indices der headings aus raw_data in liste
+                vz_cleaned.append(entry_heading_in_vz)                                  # speichere Eintrag an ^index in vz_cleaned
+
+    return vz_dirty, vz_cleaned, heading_occurrences_in_data
 
 
-    return inhaltsverzeichnis_clean, heading_indices_in_raw
-
-
-def isVerzeichnisEntry(inhvz_line):
+def isVZEntry(inhvz_line):
     return has_entry_part_front(inhvz_line) and has_entry_part_back(inhvz_line)
 
 
-def isVerzeichnisEntry_part_front(inhvz_line, cached_line):
+def isVZEntry_part_front(inhvz_line, cached_line):
     return has_entry_part_front(inhvz_line) and cached_line == ""
 
 
-def isVerzeichnisEntry_part_back(inhvz_line, cached_line):
+def isVZEntry_part_back(inhvz_line, cached_line):
     return has_entry_part_back(inhvz_line) and cached_line != ""
 
 
 def has_entry_part_front(inhvz_line):
-    return inhvz_line[0].isdigit() and (inhvz_line[1] == '.' or inhvz_line[2] == '.')
+    return (inhvz_line[0].isdigit() and inhvz_line[1] == '.') or (inhvz_line[1].isdigit() and inhvz_line[2] == '.')
 
 
 def has_entry_part_back(inhvz_line):
-    return inhvz_line[-1].isdigit() and inhvz_line[-5] == '.' and ".........." in inhvz_line
+    return (((inhvz_line[-1].isdigit() and inhvz_line[-2] == ' ')
+             or (inhvz_line[-1].isdigit() and inhvz_line[-2].isdigit() and inhvz_line[-3] == ' '))
+            or (inhvz_line[-1].isdigit() and inhvz_line[-2].isdigit() and inhvz_line[-3].isdigit() and inhvz_line[
+                -4] == ' '))
 
 
 def shorten_list(input_list, start, end):
     if end == 0:
-        end = len(input_list)-1
+        end = len(input_list) - 1
     output_list = []
     for index, line in enumerate(input_list):
         if start < index <= end:
@@ -4126,8 +4161,11 @@ output = cleanUp(input_text, debug)
 inhaltsverzeichnis_raw = shorten_list(output, 3, 80)
 if debug:
     print(make_string_from_list(inhaltsverzeichnis_raw))
-inhaltsverzeichnis_clean = create_Inhaltsverzeichnis(output, 3, 80, 50)
-print(inhaltsverzeichnis_clean)
-
-
-
+inhaltsverzeichnis_done = create_inhaltsverzeichnis(output, 0, 81, 0, 80, debug)
+for heading in inhaltsverzeichnis_done[0]:
+    print(str(heading))
+for heading in inhaltsverzeichnis_done[1]:
+    print(str(heading))
+for heading in inhaltsverzeichnis_done[2]:
+    print(str(heading))
+#print("\n" + str(inhaltsverzeichnis_done[2]))
