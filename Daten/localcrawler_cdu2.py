@@ -14218,6 +14218,7 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
     # find equal headings from (vz_dirty) in raw text (data)-> safe indices in list
     # removes dots and numbers from headings -> clean
     heading_index_found_in_data = []
+    multiliner_index_found_in_data = []
     vz_cleaned = []
     data_shortened = data[80:]  #= shorten_list(data, start_data_from_index_on, 0)
 
@@ -14243,6 +14244,7 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
             # Fallback: Vergleiche erste 60 Zeichen
             elif entry[:60] in entry_in_data:
                 heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
+                multiliner_index_found_in_data.append(index_in_data + start_data_from_index_on)
                 print(f"\n--- zweizeilig ---:")
                 print(f"Zeile                #{index_in_data}")
                 print(f"Original-Inhalt:     {entry_in_data}")
@@ -14256,7 +14258,7 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
             counter += 1
             print(f"\nNot Found ({counter}):       {entry}")
 
-    return headlines_plain, vz_cleaned, heading_index_found_in_data
+    return headlines_plain, vz_cleaned, heading_index_found_in_data, multiliner_index_found_in_data
 
 
 def isVZEntry(inhvz_line):
@@ -14306,14 +14308,18 @@ def print_one_index(inhaltsverzeichnisse, index):
     print(inhaltsverzeichnisse[2][index])
 
 
-def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned, heading_index_found_in_data
+def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned, heading_index_found_in_data, multiliner
     index = 0
+    nextmultiliner = 0
     while len(inhaltsverzeichnis_done[1]) > index:
         print("\nEintrag #" + str(index) + ":")
         print("                                                 "+str(inhaltsverzeichnisse[0][index]) + "\n" +
               str("Headline aus Inhaltsverzeichnis:                 " + inhaltsverzeichnisse[1][index]) + "\n" +
               str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index])+":         "
-                  + "           " + data[inhaltsverzeichnisse[2][index]]) + "\n")
+                  + "           " + data[inhaltsverzeichnisse[2][index]]))
+        if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][index] == inhaltsverzeichnisse[3][nextmultiliner]:
+            print(str(data[inhaltsverzeichnisse[2][index]+1]))
+            nextmultiliner += 1
         index += 1
 
 
@@ -14343,4 +14349,5 @@ print("\nOCCURRENCIES:" + str(len(inhaltsverzeichnis_done[2])))
 for heading in inhaltsverzeichnis_done[2]:
     print(str(heading))
 
+print(inhaltsverzeichnis_done[3])
 print_all_index(inhaltsverzeichnis_done, output)
