@@ -14329,9 +14329,11 @@ def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned,
 import csv
 
 
-def write_CSV(inhaltsverzeichnisse, data, output_file="output.csv"):
+def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):
+    offset = 146
+
     headline_index = 0
-    data_index = 0  # Start bei 0 für den ersten Eintrag in 'data'
+    data_index = offset  # Start bei 0 für den ersten Eintrag in 'data'
     nextmultiliner = 0
 
     with open(output_file, mode='w', newline='', encoding='utf-8') as file:
@@ -14354,7 +14356,7 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="output.csv"):
             if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][headline_index] == \
                     inhaltsverzeichnisse[3][nextmultiliner]:
                 print(
-                    f"Ist Multiliner: Index in Data: {inhaltsverzeichnisse[2][headline_index]}, Multiliner: {inhaltsverzeichnisse[3][nextmultiliner]}")
+                    f"Ist Multiliner: Index in Data: {inhaltsverzeichnisse[2][headline_index]}, Multiliner: {inhaltsverzeichnisse[3][nextmultiliner] + offset}")
                 nextmultiliner += 1
                 skipper = 2
 
@@ -14364,8 +14366,12 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="output.csv"):
                     print(f"Hänge Daten hinzu (data index:{data_index}, headline_index_in_data: {headline_index_in_data}): {data[data_index]}")
                     content += data[data_index] + " "  # Füge den Inhalt zur aktuellen Zeile hinzu
                 else:
-                    print(
-                        f"Überspringe: (data index:{data_index}, headline_index_in_data: {headline_index_in_data}, Next Multiliner: {inhaltsverzeichnisse[3][nextmultiliner]}): {data[data_index]}")
+                    # Zusätzliche Absicherung:
+                    if nextmultiliner < len(inhaltsverzeichnisse[3]):
+                        print(
+                            f"Überspringe: (data index:{data_index}, headline_index_in_data: {headline_index_in_data}, Next Multiliner: {inhaltsverzeichnisse[3][nextmultiliner] + offset}): {data[data_index]}")
+                    else:
+                        print(f"Überspringe: (data index:{data_index}, headline_index_in_data: {headline_index_in_data}, Kein weiterer Multiliner vorhanden)")
 
                 data_index += 1  # Inkrementiere den Datenindex
                 skipper -= 1
@@ -14388,6 +14394,7 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="output.csv"):
                 headline_index += 1  # Gehe zur nächsten Headline, falls der Index passt
 
         print("CSV-Datei wurde erfolgreich geschrieben.")
+
 
 
 #########################################
