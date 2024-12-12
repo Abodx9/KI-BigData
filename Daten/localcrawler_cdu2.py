@@ -14233,7 +14233,7 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
         found = False
         for index_in_data, entry_in_data in enumerate(data_shortened):  # iteriere über gekürzte raw-Daten
             # Direkter Vergleich
-            if entry in entry_in_data:
+            if entry in entry_in_data and entry_in_data[0].isdigit():
                 heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
                 print(f"\nZeile                #{index_in_data}")
                 print(f"Original-Inhalt:     {entry_in_data}")
@@ -14243,7 +14243,7 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
                 break
 
             # Fallback: Vergleiche erste 60 Zeichen
-            elif entry[:60] in entry_in_data:
+            elif entry[:60] in entry_in_data and entry_in_data[0].isdigit():
                 heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
                 multiliner_index_found_in_data.append(index_in_data + start_data_from_index_on)
                 print(f"\n--- zweizeilig ---:")
@@ -14314,39 +14314,80 @@ def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned,
     nextmultiliner = 0
     while len(inhaltsverzeichnis_done[1]) > index:
         print("\nEintrag #" + str(index) + ":")
-        print("                                                 "+str(inhaltsverzeichnisse[0][index]) + "\n" +
+        print("                                                 " + str(inhaltsverzeichnisse[0][index]) + "\n" +
               str("Headline aus Inhaltsverzeichnis:                 " + inhaltsverzeichnisse[1][index]) + "\n" +
-              str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index])+":         "
+              str("Data an Stelle des Index #" + str(inhaltsverzeichnisse[2][index]) + ":         "
                   + "           " + data[inhaltsverzeichnisse[2][index]]))
-        if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][index] == inhaltsverzeichnisse[3][nextmultiliner]:
-            print(str(data[inhaltsverzeichnisse[2][index]+1])) # finde in data die Zeile nach dem ersten Part des Multiliners
+        if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][index] == inhaltsverzeichnisse[3][
+            nextmultiliner]:
+            print(str(data[inhaltsverzeichnisse[2][
+                               index] + 1])+", Multiliner: "+str(inhaltsverzeichnisse[3][nextmultiliner]))  # finde in data die Zeile nach dem ersten Part des Multiliners
             nextmultiliner += 1
         index += 1
 
 
-def print_all(inhaltsverzeichnisse, data): # TODO WIP
-    zeile = 0
-    condition_ist_heading = zeile != 0
+import csv
 
-    with open('cdudata_1.csv', mode='w', newline='') as file:
+
+def write_CSV(inhaltsverzeichnisse, data, output_file="output.csv"):
+    headline_index = 0
+    data_index = 0  # Start bei 0 für den ersten Eintrag in 'data'
+    nextmultiliner = 0
+
+    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
 
-        # Start mit einer leeren Zeile
-        row = ["Titel", "Paragraph"]
+        # Schreibe Header in die CSV-Datei
+        writer.writerow(["Titel", "Paragraph"])
 
-        for entry in data:
-            if condition_ist_heading(entry):
-                # Schreibe die aktuelle Zeile und starte eine neue Zeile
-                writer.writerow(row)
-                row = [entry]  # Fange eine neue Zeile an
-            else:
-                # Füge das Element zur aktuellen Zeile hinzu
-                row.append(entry)
+        # Gehe durch die Headlines in inhaltsverzeichnisse[1]
+        while headline_index < len(inhaltsverzeichnisse[1]):
+            headline = inhaltsverzeichnisse[1][headline_index]  # Die aktuelle Headline
+            headline_index_in_data = inhaltsverzeichnisse[2][headline_index]  # Der Index, der zu dieser Headline gehört
 
-        # Schreibe die letzte Zeile, falls noch Daten übrig sind
-        if row:
-            writer.writerow(row)
+            print(f"Verarbeite Headline: {headline} (Index in Daten: {headline_index_in_data})")
 
+            content = ""  # Start mit leerem Inhalt
+
+            # Multiliner-Bedingung: Falls Multiliner aktiviert, überspringe die erste Zeile
+            skipper = 1
+            if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][headline_index] == \
+                    inhaltsverzeichnisse[3][nextmultiliner]:
+                print(
+                    f"Ist Multiliner: Index in Data: {inhaltsverzeichnisse[2][headline_index]}, Multiliner: {inhaltsverzeichnisse[3][nextmultiliner]}")
+                nextmultiliner += 1
+                skipper = 2
+
+            # Füge alle Daten hinzu, solange der Index in 'data' nicht mit dem nächsten Index in inhaltsverzeichnisse[2] übereinstimmt
+            while data_index < len(data) and data_index != headline_index_in_data:
+                if skipper <= 0:  # Nur solange nicht Headline-row
+                    print(f"Hänge Daten hinzu (data index:{data_index}, headline_index_in_data: {headline_index_in_data}): {data[data_index]}")
+                    content += data[data_index] + " "  # Füge den Inhalt zur aktuellen Zeile hinzu
+                else:
+                    print(
+                        f"Überspringe: (data index:{data_index}, headline_index_in_data: {headline_index_in_data}, Next Multiliner: {inhaltsverzeichnisse[3][nextmultiliner]}): {data[data_index]}")
+
+                data_index += 1  # Inkrementiere den Datenindex
+                skipper -= 1
+
+            print(f"----------------------------Füge gemergte Daten hinzu--------------------------------\n")
+
+            # Schreibe die aktuelle Zeile in die CSV-Datei
+            writer.writerow(
+                [headline, content.strip()])  # .strip() entfernt eventuelle führende oder nachfolgende Leerzeichen
+
+            # Gehe zur nächsten Headline
+            headline_index += 1
+
+            # Wenn der Index mit dem nächsten Wert in 'inhaltsverzeichnisse[2]' übereinstimmt, gehe zur nächsten Zeile
+            if data_index < len(data) and data_index == inhaltsverzeichnisse[2][headline_index] if headline_index < len(
+                    inhaltsverzeichnisse[2]) else False:
+                print(
+                    f"Neuer Index {data_index} entspricht {inhaltsverzeichnisse[2][headline_index]}. Neue Zeile wird begonnen.")
+                content = ""  # Starte eine neue Zeile
+                headline_index += 1  # Gehe zur nächsten Headline, falls der Index passt
+
+        print("CSV-Datei wurde erfolgreich geschrieben.")
 
 
 #########################################
@@ -14377,3 +14418,8 @@ for heading in inhaltsverzeichnis_done[2]:
 
 print(inhaltsverzeichnis_done[3])
 print_all_index(inhaltsverzeichnis_done, output)
+
+data_without_vz = shorten_list(output, 0, 0)
+write_CSV(inhaltsverzeichnis_done, output)
+print(inhaltsverzeichnis_done[2])
+print(inhaltsverzeichnis_done[3])
