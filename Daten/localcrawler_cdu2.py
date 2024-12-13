@@ -14235,9 +14235,10 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
             # Direkter Vergleich
             if entry in entry_in_data and entry_in_data[0].isdigit():
                 heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
-                print(f"\nZeile                #{index_in_data}")
-                print(f"Original-Inhalt:     {entry_in_data}")
-                print(f"Headline-Inhalt:     {entry}")
+                if debug:
+                    print(f"\nZeile                #{index_in_data}")
+                    print(f"Original-Inhalt:     {entry_in_data}")
+                    print(f"Headline-Inhalt:     {entry}")
                 vz_cleaned.append(entry)
                 found = True
                 break
@@ -14246,10 +14247,11 @@ def create_inhaltsverzeichnis(data, limit_min, limit_max, start_data_from_index_
             elif entry[:60] in entry_in_data and entry_in_data[0].isdigit():
                 heading_index_found_in_data.append(index_in_data + start_data_from_index_on)
                 multiliner_index_found_in_data.append(index_in_data + start_data_from_index_on)
-                print(f"\n--- zweizeilig ---:")
-                print(f"Zeile                #{index_in_data}")
-                print(f"Original-Inhalt:     {entry_in_data}")
-                print(f"Headline-Inhalt:     {entry}")
+                if debug:
+                    print(f"\n--- zweizeilig ---:")
+                    print(f"Zeile                #{index_in_data}")
+                    print(f"Original-Inhalt:     {entry_in_data}")
+                    print(f"Headline-Inhalt:     {entry}")
                 vz_cleaned.append(entry)
                 found = True
                 break  # Keine weitere Suche nötig
@@ -14329,7 +14331,7 @@ def print_all_index(inhaltsverzeichnisse, data):  # headlines_plain, vz_cleaned,
 import csv
 
 
-def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):
+def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):  # headlines_plain, vz_cleaned, heading_index_found_in_data, multiliner_index_found_in_data
     offset = 146
 
     headline_index = 0
@@ -14345,7 +14347,7 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):
         # Gehe durch die Headlines in inhaltsverzeichnisse[1]
         while headline_index < len(inhaltsverzeichnisse[1]):
             headline = inhaltsverzeichnisse[1][headline_index]  # Die aktuelle Headline
-            headline_index_in_data = inhaltsverzeichnisse[2][headline_index]  # Der Index, der zu dieser Headline gehört
+            headline_index_in_data = inhaltsverzeichnisse[2][headline_index+1]  # Der Index, der zu dieser Headline gehört
 
             print(f"Verarbeite Headline: {headline} (Index in Daten: {headline_index_in_data})")
 
@@ -14353,14 +14355,13 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):
 
             # Multiliner-Bedingung: Falls Multiliner aktiviert, überspringe die erste Zeile
             skipper = 1
-            if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][headline_index] == \
-                    inhaltsverzeichnisse[3][nextmultiliner]:
+            if nextmultiliner < len(inhaltsverzeichnisse[3]) and inhaltsverzeichnisse[2][headline_index] == inhaltsverzeichnisse[3][nextmultiliner]:
                 print(
-                    f"Ist Multiliner: Index in Data: {inhaltsverzeichnisse[2][headline_index]}, Multiliner: {inhaltsverzeichnisse[3][nextmultiliner] + offset}")
+                    f"Ist Multiliner: Index in Data: {inhaltsverzeichnisse[2][headline_index]}, Index in inhvz[3]: {inhaltsverzeichnisse[3][nextmultiliner]}")
                 nextmultiliner += 1
                 skipper = 2
 
-            # Füge alle Daten hinzu, solange der Index in 'data' nicht mit dem nächsten Index in inhaltsverzeichnisse[2] übereinstimmt
+            # Füge alle Daten hinzu, solange aktuelle Row nicht mit nächstem heading index übereinstimmt
             while data_index < len(data) and data_index != headline_index_in_data:
                 if skipper <= 0:  # Nur solange nicht Headline-row
                     print(f"Hänge Daten hinzu (data index:{data_index}, headline_index_in_data: {headline_index_in_data}): {data[data_index]}")
@@ -14386,10 +14387,10 @@ def write_CSV(inhaltsverzeichnisse, data, output_file="cdu.csv"):
             headline_index += 1
 
             # Wenn der Index mit dem nächsten Wert in 'inhaltsverzeichnisse[2]' übereinstimmt, gehe zur nächsten Zeile
-            if data_index < len(data) and data_index == inhaltsverzeichnisse[2][headline_index] if headline_index < len(
+            if data_index < len(data) and data_index == inhaltsverzeichnisse[2][headline_index]+1 if headline_index < len(
                     inhaltsverzeichnisse[2]) else False:
                 print(
-                    f"Neuer Index {data_index} entspricht {inhaltsverzeichnisse[2][headline_index]}. Neue Zeile wird begonnen.")
+                    f"Neuer Index {data_index} entspricht {inhaltsverzeichnisse[2][headline_index]+1}. Neue Zeile wird begonnen.")
                 content = ""  # Starte eine neue Zeile
                 headline_index += 1  # Gehe zur nächsten Headline, falls der Index passt
 
@@ -14409,24 +14410,24 @@ debug = False
 output = cleanUp(input_text, debug)
 # create inhaltsverzeichnis from list
 inhaltsverzeichnis_raw = shorten_list(output, 3, 80)
+inhaltsverzeichnis_done = create_inhaltsverzeichnis(output, 0, 81, 80, 0, debug)
 if debug:
     print(make_string_from_list(inhaltsverzeichnis_raw))
-inhaltsverzeichnis_done = create_inhaltsverzeichnis(output, 0, 81, 80, 0, debug)
-print("REMOVED DOTS:" + str(len(inhaltsverzeichnis_done[0])))
-for heading in inhaltsverzeichnis_done[0]:
-    print(str(heading))
-print("\nCLEAN:" + str(len(inhaltsverzeichnis_done[1])))
-for heading in inhaltsverzeichnis_done[1]:
-    print(str(heading))
-print("\nOCCURRENCIES:" + str(len(inhaltsverzeichnis_done[2])))
+    print("REMOVED DOTS:" + str(len(inhaltsverzeichnis_done[0])))
+    for heading in inhaltsverzeichnis_done[0]:
+        print(str(heading))
+    print("\nCLEAN:" + str(len(inhaltsverzeichnis_done[1])))
+    for heading in inhaltsverzeichnis_done[1]:
+        print(str(heading))
+    print("\nOCCURRENCIES:" + str(len(inhaltsverzeichnis_done[2])))
 
-for heading in inhaltsverzeichnis_done[2]:
-    print(str(heading))
+#for heading in inhaltsverzeichnis_done[2]:
+#    print(str(heading))
 
-print(inhaltsverzeichnis_done[3])
-print_all_index(inhaltsverzeichnis_done, output)
+#print(inhaltsverzeichnis_done[3])
+#print_all_index(inhaltsverzeichnis_done, output)
 
 data_without_vz = shorten_list(output, 0, 0)
 write_CSV(inhaltsverzeichnis_done, output)
-print(inhaltsverzeichnis_done[2])
-print(inhaltsverzeichnis_done[3])
+#print(inhaltsverzeichnis_done[2])
+#print(inhaltsverzeichnis_done[3])
