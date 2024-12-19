@@ -1,5 +1,5 @@
 import re
-import csv
+
 
 input_text = """Das Programm für Stabilität
 
