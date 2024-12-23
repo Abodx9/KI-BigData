@@ -6,7 +6,8 @@ Our Project for AI-BigData.
 
 ## **Project Overview**
 
-This repository contains the source code for our KI-BigData project. The project aims to collect, process, and analyze political party data.
+This repository contains the source code for our AI-BigData project. The project aims to collect, process, and analyze political party data using advanced techniques such as Vector Database and RAG (Retrieval-Augmented Generation).
+
 
 
 # **Development History**
