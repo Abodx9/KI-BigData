@@ -2,7 +2,7 @@
 
 Our Project for AI-BigData.
 
-[Deutsch](blob/main/Daten/Others/README-de.md)
+[Deutsch](Daten/Others/README-de.md)
 
 ## **Project Overview**
 
