@@ -2,7 +2,7 @@
 
 Unser Projekt für AI-BigData.
 
-[Deutsch](Daten/Sonstiges/README-de.md)
+[English](Daten/Others/README.md)
 
 ## **Projektübersicht**
 
