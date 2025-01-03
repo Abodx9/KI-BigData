@@ -29,7 +29,6 @@ This repository contains the source code for our AI-BigData project. The project
 
 - Creation of diagrams and charts to visualize the data in %
 - Use of Matplotlib, Seaborn, and Wordcloud to create diagrams and charts
-
 - Wordcloud to visualize the most frequent words in the party programs (for topics and opinions)
 - Bar chart to visualize word length in the party programs (for opinions)
 - Bar chart to visualize sentiment analysis in the party programs
