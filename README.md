@@ -25,6 +25,17 @@ This repository contains the source code for our AI-BigData project. The project
 - Optimized PDF extractors based on font names and sizes
 - Implemented manual processing where necessary
 
+### **Data Visualization**
+
+- Creation of diagrams and charts to visualize the data in %
+- Use of Matplotlib, Seaborn, and Wordcloud to create diagrams and charts
+
+- Wordcloud to visualize the most frequent words in the party programs (for topics and opinions)
+- Bar chart to visualize word length in the party programs (for opinions)
+- Bar chart to visualize sentiment analysis in the party programs
+- Bar chart to visualize the frequency of keywords in the topics of the party programs
+- Heatmap to visualize the frequency of keywords in the opinions of the party programs
+
 ### **Vector Database Creation**
 
 - Created Vector Database using chromaDB

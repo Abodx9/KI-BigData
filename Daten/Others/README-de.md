@@ -26,6 +26,14 @@ Dieses Repository enthält den Quellcode für unser AI-BigData-Projekt. Das Proj
 
 ## **Visualisierung von Daten**
 
+- Erstellung von Diagrammen und Grafiken zur Visualisierung der Daten in % 
+- Verwendung von Matplotlib, Seaborn und Wordcloud zur Erstellung von Diagrammen und Grafiken
+
+- Wordcloud zur Visualisierung der häufigsten Wörter in den Parteiprogrammen (für Themen und Meinungen)
+- Balkendiagramm zur Visualisierung der Wortlänge in den Parteiprogrammen (für Meinungen)
+- Balkendiagramm zur Visualisierung der Sentimentanalyse in den Parteiprogrammen 
+- Balkendiagramm zu Visualisierung der Häufigkeit von Schlüsselwörtern in den Themen von den Wahlprogrammen
+- Heatmap zur Visualisierung der Häufigkeit von Schlüsselwörtern für Meinungen von den Wahlprogrammen
 
 ## **Erstellung-Vektorendatenbank**
 
