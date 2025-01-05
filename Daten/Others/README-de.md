@@ -1,6 +1,6 @@
-**AI-BigData**
+**Ki-BigData**
 
-Unser Projekt für AI-BigData.
+Unser Projekt für KI - BigData.
 
 
 ## **Projektübersicht**
