@@ -54,7 +54,7 @@ if dataframes:
                         "oft", "vom", "denen", "ob", "vielen", "geben", "gehen", "ihr", "ebenso",
                         "sollen", "soll", "mehr", "Deshalb", "schaffen", "alle", "dürfen", "ermöglichen", "lehnen", "kann",
                         "zum", "deutlich", "Außerdem", "weitere", "immer", "gute", "unseren", "Teil", "wichtige", "bisher",
-                        "ge", "treten", "große", "hin", "hohe"
+                        "ge", "treten", "große", "hin", "hohe", "wie", "Demokraten", "Freie", "Afd", "wer"
                         }
     stopwords = STOPWORDS.union(custom_stopwords)
 
